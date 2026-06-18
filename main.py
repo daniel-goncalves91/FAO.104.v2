@@ -17,8 +17,8 @@ from abrir_chamado import APIWtmh
 # =========================
 # CONFIGURAÇÃO
 # =========================
-CLIENT_ID = os.getenv("INPASA_CLIENT_ID")
-CLIENT_SECRET = os.getenv("INPASA_CLIENT_SECRET")
+CLIENT_ID = os.environ["GEMINI_CREDENTIALS_USUARIO"]
+CLIENT_SECRET = os.environ["GEMINI_CREDENTIALS_SENHA"]
 
 if not CLIENT_ID or not CLIENT_SECRET:
     raise Exception("INPASA_CLIENT_ID ou INPASA_CLIENT_SECRET não definidos no .env")
