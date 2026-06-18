@@ -11,9 +11,9 @@ load_dotenv()
 
 class APIWtmh():
     def __init__(self):
-        self.url_api_abertura_chamado = os.getenv("URL_API_WTMH")
-        self.__user_wtmh = os.getenv("USER_WTMH")
-        self.__pwd_wtmh = os.getenv("PWD_WTMH")
+        self.url_api_abertura_chamado = os.environ["URL_API_WTMH_ABERTURA_CHAMADO"]
+        self.__user_wtmh = os.environ["WTMH_USER"]
+        self.__pwd_wtmh = os.environ["WTMH_SENHA"]
 
     def abrir_chamado_wtmh(self, mensagem=None, codigo_entrada=None, debug=False):
         token = f"{self.__user_wtmh}:{self.__pwd_wtmh}"
