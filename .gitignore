@@ -1,0 +1,35 @@
+# Ambiente e segredos
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.eggs/
+.venv/
+venv/
+env/
+
+# Logs
+logs/
+*.log
+
+# Dados de estado em tempo de execução
+chamados_abertos.json
+confirmacoes_enviadas.json
+processamentos_enviados.json
+
+# PDFs gerados/temporários
+ticket_laudo/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
