@@ -623,7 +623,9 @@ def cmd_processar(dir_saida: str, finalizar_seq: bool):
     pendencias = listar_pendencias(token)
 
     if not pendencias:
-        discard_buffer("Sem pendências")
+        flush_buffer()
+        log_line("Sem pendências encontradas.")
+        log_line(f"\nLog salvo em: {LOG_FILE}")
         return
 
     flush_buffer()
