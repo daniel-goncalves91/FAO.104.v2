@@ -828,15 +828,18 @@ if __name__ == "__main__":
     try:
         init_log()
 
-        parser = build_parser()
-        args = parser.parse_args()
+        if len(sys.argv) == 1:
+            cmd_processar(str(Path(__file__).parent / "ticket_laudo"), True)
+        else:
+            parser = build_parser()
+            args = parser.parse_args()
 
-        if args.cmd == "listar":
-            cmd_listar()
-        elif args.cmd == "processar":
-            cmd_processar(args.dir, args.finalizar)
-        elif args.cmd == "finalizar":
-            cmd_finalizar(args.id, args.id_rateio)
+            if args.cmd == "listar":
+                cmd_listar()
+            elif args.cmd == "processar":
+                cmd_processar(args.dir, args.finalizar)
+            elif args.cmd == "finalizar":
+                cmd_finalizar(args.id, args.id_rateio)
 
     except KeyboardInterrupt:
         log_line("\nExecução cancelada pelo usuário.")
