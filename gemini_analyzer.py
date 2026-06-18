@@ -16,8 +16,8 @@ except ImportError:
 GEMINI_API_KEY = os.environ["GEMINI_KEY_FAO_104"]
 API_SIMPLES_USERNAME = os.environ["GEMINI_CREDENTIALS_USUARIO"]
 API_SIMPLES_PASSWORD = os.environ["GEMINI_CREDENTIALS_SENHA"]
-GEMINI_MODEL = os.getenv("modelo", "gemini-3.1-pro-preview")
-GEMINI_MODEL_FALLBACK = os.getenv("modelo_fallback", "gemini-3.1-pro-preview")
+GEMINI_MODEL = "gemini-3.1-pro-preview"
+GEMINI_MODEL_FALLBACK = "gemini-3.1-pro-preview"
 
 _PROMPT_PATH = Path(__file__).parent / "prompt_analise.txt"
 try:
