@@ -169,35 +169,85 @@ def _normalizar_placa(valor) -> str | None:
     return re.sub(r"[-\s]", "", str(valor)).upper()
 
 
+def extrair_numero_contrato(info_adicionais: str | None) -> str | None:
+    """Retorna a string bruta do contrato encontrado em info_adicionais (para log)."""
+    if not info_adicionais:
+        return None
+    m = re.search(r'\bCTR\s+([\w-]+)', info_adicionais, re.IGNORECASE)
+    if m:
+        return m.group(1)
+    m = re.search(r'\bcontrato\s+n\.?\s*(\d+(?:\s*\([^)]+\))?)', info_adicionais, re.IGNORECASE)
+    if m:
+        return m.group(1).strip()
+    return None
+
+
+def extrair_contratos_info_adicionais(info_adicionais: str | None) -> list[str]:
+    """Retorna todos os identificadores de contrato presentes em info_adicionais.
+
+    - "CTR 33220-1"              → ['33220-1']
+    - "contrato n36978 (29734-1)" → ['36978', '29734-1']
+    """
+    if not info_adicionais:
+        return []
+
+    # Padrão 1: CTR XXXXX-X — um único identificador
+    m = re.search(r'\bCTR\s+([\w-]+)', info_adicionais, re.IGNORECASE)
+    if m:
+        return [m.group(1)]
+
+    # Padrão 2: contrato nXXXXX (XXXXX-X) — extrai o número principal e o parentético
+    m = re.search(r'\bcontrato\s+n\.?\s*(\d+)(?:\s*\(([^)]+)\))?', info_adicionais, re.IGNORECASE)
+    if m:
+        partes = [m.group(1)]
+        if m.group(2):
+            partes.append(m.group(2).strip())
+        return partes
+
+    return []
+
+
 def validar_contra_pendencia(dados: dict, pendencia: dict) -> dict:
     erros = []
     avisos = []
 
-    # Número do contrato extraído do laudo deve corresponder a id_contrato OU contrato_original.
-    # Inválido somente se diferir dos dois.
+    # Cada identificador extraído de info_adicionais deve bater com id_contrato OU contrato_original.
+    info_adicionais = pendencia.get("info_adicionais") or pendencia.get("INFO_ADICIONAIS") or ""
+    contrato_referencia = extrair_numero_contrato(info_adicionais)          # string bruta p/ log
+    contratos_info = extrair_contratos_info_adicionais(info_adicionais)     # lista de identificadores
     id_contrato = pendencia.get("id_contrato") or pendencia.get("ID_CONTRATO")
     contrato_original = pendencia.get("contrato_original") or pendencia.get("CONTRATO_ORIGINAL")
-    contrato_laudo = dados.get("laudo", {}).get("numero_contrato")
+    contrato_valido: bool | None = None
 
-    if contrato_laudo is None:
-        avisos.append("Contrato: não encontrado no laudo (validação ignorada)")
-    elif id_contrato is None and contrato_original is None:
-        avisos.append("Contrato: campos id_contrato e contrato_original não disponíveis na API (validação ignorada)")
+    referencias_api = {
+        v for raw in (id_contrato, contrato_original)
+        if raw is not None
+        for v in [_apenas_digitos(str(raw))]
+        if v
+    }
+
+    if not contratos_info:
+        avisos.append("Contrato: não identificado em info_adicionais (validação ignorada)")
+    elif not referencias_api:
+        avisos.append("Contrato: id_contrato e contrato_original ausentes na API (validação ignorada)")
     else:
-        contrato_laudo_d = _apenas_digitos(contrato_laudo)
-        bate_id = id_contrato is not None and _apenas_digitos(id_contrato) == contrato_laudo_d
-        bate_original = contrato_original is not None and _apenas_digitos(contrato_original) == contrato_laudo_d
-        if not bate_id and not bate_original:
+        divergentes = [c for c in contratos_info if _apenas_digitos(c) not in referencias_api]
+        if divergentes:
             erros.append(
-                f"Contrato divergente: laudo={contrato_laudo!r} "
-                f"(esperado id_contrato={id_contrato!r} ou contrato_original={contrato_original!r})"
+                f"Contrato divergente: info_adicionais={contrato_referencia!r} "
+                f"(esperado: id_contrato={id_contrato!r} | contrato_original={contrato_original!r})"
             )
+            contrato_valido = False
+        else:
+            contrato_valido = True
+
+    _contrato = {"referencia": contrato_referencia, "laudo": None, "valido": contrato_valido}
 
     apenas_qtd = dados.get("apenas_valida_quantidade", False)
     if apenas_qtd:
         tipo = dados.get("laudo", {}).get("tipo_produto") or "produto especial"
         avisos.append(f"Produto '{tipo}' identificado como especial: validando apenas quantidade")
-        return {"erros": erros, "avisos": avisos, "apenas_valida_quantidade": True}
+        return {"erros": erros, "avisos": avisos, "apenas_valida_quantidade": True, "contrato": _contrato}
 
     ticket = dados.get("ticket", {})
     laudo = dados.get("laudo", {})
@@ -267,7 +317,7 @@ def validar_contra_pendencia(dados: dict, pendencia: dict) -> dict:
             f"Placa divergente: ticket={ticket.get('placa')!r} != laudo={laudo.get('placa')!r}"
         )
 
-    return {"erros": erros, "avisos": avisos, "apenas_valida_quantidade": False}
+    return {"erros": erros, "avisos": avisos, "apenas_valida_quantidade": False, "contrato": _contrato}
 
 
 def analisar_e_validar(caminho_ticket: str, caminho_laudo: str, pendencia: dict) -> dict:
