@@ -7,6 +7,8 @@ import argparse
 from pathlib import Path
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type, before_sleep_log
+import logging
 
 load_dotenv()
 
@@ -26,7 +28,7 @@ if not CLIENT_ID or not CLIENT_SECRET:
 TOKEN_URL = "https://aplicativo.inpasa.com.br/apex/inpasa/oauth/token"
 BASE_URL = "https://aplicativo.inpasa.com.br/ords/apex/inpasa/v1/api/roberty"
 
-TIMEOUT = 120
+TIMEOUT = 60
 LOG_DIR = Path(__file__).parent / "logs"
 ABRIR_CHAMADO = os.getenv("ABRIR_CHAMADO", "true").strip().lower() == "true"
 _MAX_PREVIEW_CHARS = 120
@@ -310,18 +312,31 @@ def auth_headers(token: str) -> dict:
     }
 
 
+_logger = logging.getLogger(__name__)
+
+@retry(
+    retry=retry_if_exception_type(requests.Timeout),
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=5, max=30),
+    before_sleep=before_sleep_log(_logger, logging.WARNING),
+    reraise=True,
+)
+def _executar_request(method: str, url: str, headers, params, json_body) -> requests.Response:
+    return requests.request(
+        method=method,
+        url=url,
+        headers=headers,
+        params=params,
+        json=json_body,
+        timeout=TIMEOUT,
+    )
+
+
 def request_json(method: str, url: str, *, headers=None, params=None, json_body=None):
     try:
-        resp = requests.request(
-            method=method,
-            url=url,
-            headers=headers,
-            params=params,
-            json=json_body,
-            timeout=TIMEOUT,
-        )
+        resp = _executar_request(method, url, headers, params, json_body)
     except requests.Timeout:
-        raise InpasaApiError(f"Timeout ao conectar em {url} (>{TIMEOUT}s)")
+        raise InpasaApiError(f"Timeout ao conectar em {url} após 3 tentativas (>{TIMEOUT}s cada)")
     except requests.ConnectionError as e:
         raise InpasaApiError(f"Erro de conexão em {url}: {e}")
 
