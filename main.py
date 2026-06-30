@@ -28,7 +28,7 @@ if not CLIENT_ID or not CLIENT_SECRET:
 TOKEN_URL = "https://aplicativo.inpasa.com.br/apex/inpasa/oauth/token"
 BASE_URL = "https://aplicativo.inpasa.com.br/ords/apex/inpasa/v1/api/roberty"
 
-TIMEOUT = 60
+TIMEOUT = 120
 LOG_DIR = Path(__file__).parent / "logs"
 ABRIR_CHAMADO = os.getenv("ABRIR_CHAMADO", "true").strip().lower() == "true"
 _MAX_PREVIEW_CHARS = 120
