@@ -634,8 +634,12 @@ def cmd_processar(dir_saida: str, finalizar_seq: bool):
     global _buffering
     _buffering = True
 
-    token = get_access_token()
-    pendencias = listar_pendencias(token)
+    try:
+        token = get_access_token()
+        pendencias = listar_pendencias(token)
+    except Exception:
+        flush_buffer()
+        raise
 
     if not pendencias:
         flush_buffer()
