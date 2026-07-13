@@ -735,7 +735,8 @@ def cmd_processar(dir_saida: str, finalizar_seq: bool):
             erro_retornado = p.get("inconsistencia") or json.dumps(p, ensure_ascii=False)
             log_line(f"  ✖ Status INCONSISTENTE: {erro_retornado}")
             mensagem = f"ID {id_hist} com status INCONSISTENTE:\n{erro_retornado}"
-            _tentar_abrir_chamado(id_hist, cod_entrada, mensagem, f"INCONSISTENTE:{erro_retornado}")
+            motivo_key = "INCONSISTENTE:" + erro_retornado.strip().splitlines()[0].strip()
+            _tentar_abrir_chamado(id_hist, cod_entrada, mensagem, motivo_key)
         elif status == "PENDENTE":
             analise_aprovada = True
             motivos_reprovacao: list[str] = []
