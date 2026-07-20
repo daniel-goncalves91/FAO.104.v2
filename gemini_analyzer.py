@@ -243,6 +243,9 @@ def validar_contra_pendencia(dados: dict, pendencia: dict) -> dict:
 
     _contrato = {"referencia": contrato_referencia, "laudo": None, "valido": contrato_valido}
 
+    if dados.get("e_documento_laudo") is False:
+        erros.append("Arquivo de laudo não contém a palavra 'Laudo' — documento suspeito ou incorreto")
+
     apenas_qtd = dados.get("apenas_valida_quantidade", False)
     if apenas_qtd:
         tipo = dados.get("laudo", {}).get("tipo_produto") or "produto especial"

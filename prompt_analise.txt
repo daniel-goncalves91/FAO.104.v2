@@ -36,6 +36,9 @@ REGRA PRODUTO ESPECIAL:
 Se tipo_produto contiver "199" OU "Caroço de Algodão" (ignorar maiúsculas/minúsculas/acentos):
 → defina apenas_valida_quantidade como true
 
+REGRA VALIDAÇÃO DO LAUDO:
+• e_documento_laudo: true se o Documento 2 contiver a palavra "Laudo" em qualquer parte do texto (ignorar maiúsculas/minúsculas), false caso contrário
+
 ---
 
 RESPONDA SOMENTE com o JSON abaixo. Nenhum texto adicional, sem markdown, sem bloco de código:
@@ -61,5 +64,6 @@ RESPONDA SOMENTE com o JSON abaixo. Nenhum texto adicional, sem markdown, sem bl
     "peso_liquido": <número ou null>,
     "placa": <string ou null>
   },
-  "apenas_valida_quantidade": <boolean>
+  "apenas_valida_quantidade": <boolean>,
+  "e_documento_laudo": <boolean>
 }
